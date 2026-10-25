@@ -1,0 +1,88 @@
+
+nameOverride: ""
+fullnameOverride: ""
+
+images:
+  gateway:
+    repository: woocommerce-gateway
+    tag: local
+    pullPolicy: IfNotPresent
+  dashboard:
+    repository: woocommerce-dashboard
+    tag: local
+    pullPolicy: IfNotPresent
+  calculator:
+    repository: woocommerce-calculator-mcp
+    tag: local
+    pullPolicy: IfNotPresent
+  currency:
+    repository: woocommerce-currency-mcp
+    tag: local
+    pullPolicy: IfNotPresent
+  woocommerceMcp:
+    repository: woocommerce-woocommerce-mcp
+    tag: local
+    pullPolicy: IfNotPresent
+
+  dashboardApi:
+    repository: woocommerce-dashboard-api
+    tag: local
+    pullPolicy: IfNotPresent
+
+services:
+  gateway:
+    port: 8004
+  dashboard:
+    port: 8005
+  calculator:
+    port: 8001
+  currency:
+    port: 8002
+  woocommerceMcp:
+    port: 8003
+  wordpress:
+    port: 80
+  mariadb:
+    port: 3306
+  postgres:
+    port: 5432
+  mongo:
+    port: 27017
+  redis:
+    port: 6379
+
+wordpress:
+  image: wordpress:php8.2-apache
+  persistence:
+    enabled: true
+    size: 5Gi
+
+mariadb:
+  image: mariadb:11.4
+  persistence:
+    enabled: true
+    size: 5Gi
+
+postgres:
+  image: ankane/pgvector:latest
+  persistence:
+    enabled: true
+    size: 5Gi
+
+mongo:
+  image: mongo:7
+  persistence:
+    enabled: true
+    size: 5Gi
+
+redis:
+  image: redis:7-alpine
+
+ingress:
+  enabled: false
+  className: nginx
+  wordpressHost: shop.local
+  dashboardHost: dashboard.local
+
+secrets:
+  existingSecret: woocommerce-mcp-secrets

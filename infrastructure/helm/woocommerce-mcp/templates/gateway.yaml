@@ -1,0 +1,61 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-gateway
+  labels:
+    app: woocommerce-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: woocommerce-gateway
+  template:
+    metadata:
+      labels:
+        app: woocommerce-gateway
+    spec:
+      containers:
+        - name: gateway
+          image: "{{ .Values.images.gateway.repository }}:{{ .Values.images.gateway.tag }}"
+          imagePullPolicy: {{ .Values.images.gateway.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8004
+          env:
+            - name: CALCULATOR_MCP_URL
+              value: "http://{{ .Release.Name }}-calculator:8001/mcp"
+            - name: CURRENCY_MCP_URL
+              value: "http://{{ .Release.Name }}-currency:8002/mcp"
+            - name: WOOCOMMERCE_MCP_URL
+              value: "http://{{ .Release.Name }}-woocommerce-mcp:8003/mcp"
+          readinessProbe:
+            tcpSocket:
+              port: 8004
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8004
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-gateway
+spec:
+  selector:
+    app: woocommerce-gateway
+  ports:
+    - name: http
+      port: 8004
+      targetPort: 8004
+  type: ClusterIP

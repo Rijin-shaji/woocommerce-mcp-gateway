@@ -3,3 +3,19 @@ __pycache__/
 *.py[cod]
 .env
 .idea/
+
+# Node dependencies and generated builds
+node_modules/
+frontend/node_modules/
+dist/
+build/
+
+# Local databases and backups
+*.db
+*.sqlite
+*.sqlite3
+*.truncated-backup
+
+# Local environment files
+.env.*
+!.env.example

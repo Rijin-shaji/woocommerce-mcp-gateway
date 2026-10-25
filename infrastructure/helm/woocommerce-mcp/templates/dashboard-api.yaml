@@ -1,0 +1,97 @@
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-dashboard-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-dashboard-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-dashboard-api
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-dashboard-api
+    spec:
+      containers:
+        - name: dashboard-api
+          image: "{{ .Values.images.dashboardApi.repository }}:{{ .Values.images.dashboardApi.tag }}"
+          imagePullPolicy: {{ .Values.images.dashboardApi.pullPolicy }}
+          command: ["python", "-m", "uvicorn"]
+          args:
+            - backend.app.dashboard_api:app
+            - --host
+            - 0.0.0.0
+            - --port
+            - "8005"
+          ports:
+            - name: http
+              containerPort: 8005
+          env:
+            - name: DASHBOARD_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: DASHBOARD_SECRET_KEY
+            - name: GROQ_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: GROQ_API_KEY
+            - name: MCP_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: MCP_API_KEY
+            - name: GATEWAY_URL
+              value: "http://{{ .Release.Name }}-gateway:8004/mcp"
+            - name: DATABASE_PATH
+              value: /data/security.db
+          volumeMounts:
+            - name: dashboard-data
+              mountPath: /data
+          readinessProbe:
+            tcpSocket:
+              port: 8005
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8005
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+      volumes:
+        - name: dashboard-data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-dashboard-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard-api
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .Release.Name }}-dashboard-api
+  ports:
+    - name: http
+      port: 8005
+      targetPort: 8005

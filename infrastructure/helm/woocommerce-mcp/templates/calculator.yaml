@@ -1,0 +1,54 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-calculator
+  labels:
+    app: calculator-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calculator-mcp
+  template:
+    metadata:
+      labels:
+        app: calculator-mcp
+    spec:
+      containers:
+        - name: calculator
+          image: "{{ .Values.images.calculator.repository }}:{{ .Values.images.calculator.tag }}"
+          imagePullPolicy: {{ .Values.images.calculator.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8001
+          readinessProbe:
+            tcpSocket:
+              port: 8001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8001
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-calculator
+spec:
+  selector:
+    app: calculator-mcp
+  ports:
+    - name: http
+      port: 8001
+      targetPort: 8001
+  type: ClusterIP

@@ -1,0 +1,54 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-currency
+  labels:
+    app: currency-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: currency-mcp
+  template:
+    metadata:
+      labels:
+        app: currency-mcp
+    spec:
+      containers:
+        - name: currency
+          image: "{{ .Values.images.currency.repository }}:{{ .Values.images.currency.tag }}"
+          imagePullPolicy: {{ .Values.images.currency.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8002
+          readinessProbe:
+            tcpSocket:
+              port: 8002
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8002
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-currency
+spec:
+  selector:
+    app: currency-mcp
+  ports:
+    - name: http
+      port: 8002
+      targetPort: 8002
+  type: ClusterIP
