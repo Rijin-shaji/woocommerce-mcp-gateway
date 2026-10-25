@@ -1,0 +1,58 @@
+# TEMPLATE ONLY — replace every example value before deployment.
+# Do not put passwords, API keys, or other secret values in this file.
+# Build and push versioned images to a registry reachable by the target cluster.
+images:
+  gateway:
+    repository: ghcr.io/REPLACE_WITH_OWNER/woocommerce-gateway
+    tag: REPLACE_WITH_VERSION
+    pullPolicy: IfNotPresent
+  dashboard:
+    repository: ghcr.io/REPLACE_WITH_OWNER/woocommerce-dashboard
+    tag: REPLACE_WITH_VERSION
+    pullPolicy: IfNotPresent
+  calculator:
+    repository: ghcr.io/REPLACE_WITH_OWNER/woocommerce-calculator-mcp
+    tag: REPLACE_WITH_VERSION
+    pullPolicy: IfNotPresent
+  currency:
+    repository: ghcr.io/REPLACE_WITH_OWNER/woocommerce-currency-mcp
+    tag: REPLACE_WITH_VERSION
+    pullPolicy: IfNotPresent
+  woocommerceMcp:
+    repository: ghcr.io/REPLACE_WITH_OWNER/woocommerce-woocommerce-mcp
+    tag: REPLACE_WITH_VERSION
+    pullPolicy: IfNotPresent
+  dashboardApi:
+    repository: ghcr.io/REPLACE_WITH_OWNER/woocommerce-dashboard-api
+    tag: REPLACE_WITH_VERSION
+    pullPolicy: IfNotPresent
+
+wordpress:
+  persistence:
+    enabled: true
+    size: 20Gi
+
+mariadb:
+  persistence:
+    enabled: true
+    size: 20Gi
+
+postgres:
+  persistence:
+    enabled: true
+    size: 10Gi
+
+ingress:
+  enabled: true
+  className: nginx
+  wordpressHost: shop.example.com
+  dashboardHost: dashboard.example.com
+
+# Use the existingSecret setting in values.yaml and create that Secret in the
+# target cluster through a secure deployment process. Never commit its values.
+secrets:
+  existingSecret: woocommerce-mcp-secrets
+
+# Before public production use, extend and test the chart's Ingress template
+# for TLS, configure a supported storageClassName if needed, review resource
+# requests/limits for every workload, and apply appropriate NetworkPolicies.
