@@ -1,0 +1,33 @@
+# Kind/local overrides. Keep shared defaults in values.yaml.
+# Build images and load them into Kind before installing the chart.
+images:
+  gateway:
+    repository: woocommerce-gateway
+    tag: local
+    pullPolicy: IfNotPresent
+  dashboard:
+    repository: woocommerce-dashboard
+    tag: local
+    pullPolicy: IfNotPresent
+  calculator:
+    repository: woocommerce-calculator-mcp
+    tag: local
+    pullPolicy: IfNotPresent
+  currency:
+    repository: woocommerce-currency-mcp
+    tag: local
+    pullPolicy: IfNotPresent
+  woocommerceMcp:
+    repository: woocommerce-woocommerce-mcp
+    tag: local
+    pullPolicy: IfNotPresent
+  dashboardApi:
+    repository: woocommerce-dashboard-api
+    tag: local
+    pullPolicy: IfNotPresent
+
+ingress:
+  enabled: true
+  className: nginx
+  wordpressHost: shop.local
+  dashboardHost: dashboard.local
