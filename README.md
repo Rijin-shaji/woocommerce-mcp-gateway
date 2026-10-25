@@ -182,3 +182,57 @@ The repository contains the application source, Dockerfiles, Docker Compose conf
 **Rijin Shaji**
 
 Repository: https://github.com/Rijin-shaji/woocommerce-mcp-gateway
+
+
+## Assignment Deliverables and Design Notes
+
+- [System design and trade-offs](docs/system-design.md)
+- [Threat model and security test plan](docs/threat-model.md)
+
+These documents describe the architecture, trust boundaries, expected safeguards, and verification checklist. A listed test or mitigation should be considered complete only after it has been run and its result recorded.
+
+## Environment-specific Helm values
+
+The chart supports shared templates with environment-specific values files, following Helm's standard `-f` override mechanism ([Helm values documentation](https://helm.sh/docs/intro/cheatsheet/)).
+
+- `infrastructure/helm/woocommerce-mcp/values.yaml`: shared chart defaults.
+- `infrastructure/helm/woocommerce-mcp/values-local.yaml`: Kind/local image tags and local Ingress hostnames.
+- `infrastructure/helm/woocommerce-mcp/values-production.yaml`: **template only**. Replace the example image registry, version tags, domains, and storage settings for your actual VPS/k3s cluster. It is not a ready-to-run production configuration and does not itself add TLS or NetworkPolicies.
+
+### Validate and render the chart
+
+Run these commands from the repository root in PowerShell:
+
+```powershell
+helm lint ./infrastructure/helm/woocommerce-mcp -f ./infrastructure/helm/woocommerce-mcp/values-local.yaml
+helm template woocommerce-mcp ./infrastructure/helm/woocommerce-mcp -f ./infrastructure/helm/woocommerce-mcp/values-local.yaml
+```
+
+After loading the local images into Kind and creating the Kubernetes Secret expected by the chart, deploy or upgrade:
+
+```powershell
+helm upgrade --install woocommerce-mcp ./infrastructure/helm/woocommerce-mcp -f ./infrastructure/helm/woocommerce-mcp/values-local.yaml
+kubectl get pods,services,pvc,ingress
+```
+
+For a VPS/k3s deployment, first customize the production template and configure the cluster's ingress controller, storage class, TLS, secret delivery, backups, and network restrictions. Then lint/render with the production values file and review the rendered manifests before deploying. Do not commit actual credentials.
+
+## Definition-of-done checklist
+
+Use this as a test checklist before recording the assignment walkthrough:
+
+- [ ] A valid API key completes a real MCP client → gateway → upstream tool call.
+- [ ] Missing and invalid API keys are rejected.
+- [ ] Two separate users are tested; one cannot read or modify the other's protected data.
+- [ ] Calculator, currency, and WooCommerce tools are discovered and invoked through the gateway.
+- [ ] Tool-name collisions, a stopped upstream, and a slow upstream have documented safe outcomes.
+- [ ] The Kubernetes WordPress instance is initialized and its product/order flow is tested (the Compose store has separate data).
+- [ ] Pods, Services, persistent volume claims, Ingress, probes, and resource requests/limits are shown in the walkthrough.
+- [ ] Local and production-like Helm values are rendered and reviewed; production settings are customized rather than left as placeholders.
+- [ ] The chat agent is demonstrated acting as the authenticated user, and its tool loop is explained.
+- [ ] Helm upgrade and rollback commands are documented and tested in a non-production environment.
+- [ ] The video and screenshots contain no credentials, API keys, or passwords.
+
+## Security note
+
+The chart currently uses host-based Ingress routing without TLS in its Ingress template. Do not expose the dashboard or store publicly until HTTPS/TLS and the target cluster's access controls have been configured and tested. Internal ClusterIP Services reduce direct exposure but are not a replacement for Kubernetes NetworkPolicies where explicit network restrictions are required.
